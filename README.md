@@ -12,7 +12,7 @@
 | Вебхук утилиты                  | `verify_signature(body, signature, token)`<br>`parse_webhook_payload(body)` | HMAC SHA-256 проверка и парсинг события |
 | Примеры                         | `sdks/python/examples/fastapi/main.py`               | Демонстрация async webhook handler + выдача short code |
 
-Все ошибки, которые возвращает Client API, описаны в публичной документации (`docs/public/content/api/central.mdx`). SDK мапит их в `ApiError`.
+Все ошибки, которые возвращает Client API, описаны в публичной документации (`docs/public/content/api/central.md`). SDK мапит их в `ApiError`.
 
 ## Структура проекта
 
