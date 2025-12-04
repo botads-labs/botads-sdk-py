@@ -7,25 +7,26 @@ commitlint:
   before_script:
     - apk add --no-cache git
   script:
-    - set -euo pipefail
-    - base_ref="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-${CI_DEFAULT_BRANCH:-main}}"
-    - git fetch origin "$base_ref"
-    - if [ -n "${CI_MERGE_REQUEST_IID:-}" ]; then
-        range="${base_ref}..${CI_COMMIT_SHA}";
+    - |
+      set -euo pipefail
+      base_ref="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-${CI_DEFAULT_BRANCH:-main}}"
+      git fetch origin "$base_ref"
+      if [ -n "${CI_MERGE_REQUEST_IID:-}" ]; then
+        range="${base_ref}..${CI_COMMIT_SHA}"
       elif [ "${CI_COMMIT_BEFORE_SHA:-0000000000000000000000000000000000000000}" = "0000000000000000000000000000000000000000" ]; then
-        range="${CI_COMMIT_SHA}";
+        range="${CI_COMMIT_SHA}"
       else
-        range="${CI_COMMIT_BEFORE_SHA:-$base_ref}..${CI_COMMIT_SHA}";
+        range="${CI_COMMIT_BEFORE_SHA:-$base_ref}..${CI_COMMIT_SHA}"
       fi
-    - commits="$(git log --format='%h %s' "${range}")"
-    - if [ -z "$commits" ]; then
-        echo "No commits to lint";
-        exit 0;
+      commits="$(git log --format='%s' "${range}")"
+      if [ -z "$commits" ]; then
+        echo "No commits to lint"
+        exit 0
       fi
-    - echo "$commits" | sed '/^$/d'
-    - if echo "$commits" | grep -Ev '^(feat|fix|chore|docs|refactor|test|build|ci|revert)(\(.+\))?(!)?: ' >/dev/null; then
-        echo "Commit messages must follow conventional commits";
-        exit 1;
+      echo "$commits" | sed '/^$/d'
+      if echo "$commits" | grep -Ev '^(feat|fix|chore|docs|refactor|test|build|ci|revert)(\\(.+\\))?(!)?: ' >/dev/null; then
+        echo "Commit messages must follow conventional commits"
+        exit 1
       fi
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
