@@ -5,7 +5,7 @@ from fastapi import FastAPI, Header, HTTPException, Request
 from botads import AsyncBotadsClient, parse_webhook_payload, verify_signature
 
 BOT_API_TOKEN = os.getenv("BOT_API_TOKEN", "BOT_API_TOKEN")
-BOT_ID = int(os.getenv("BOT_ID", "123456789"))
+BOT_ID = os.getenv("BOT_ID", "123456789")
 CLIENT_BASE_URL = os.getenv("CLIENT_BASE_URL", "http://localhost:8080")
 
 app = FastAPI()
@@ -29,7 +29,7 @@ async def webhook(
     x_bot_id: str = Header(default=""),
 ):
     body = await request.body()
-    if BOT_ID and x_bot_id and str(BOT_ID) != x_bot_id:
+    if BOT_ID and x_bot_id and BOT_ID != x_bot_id:
         raise HTTPException(status_code=401, detail="bot_id mismatch")
     if not verify_signature(body, x_signature or "", BOT_API_TOKEN):
         raise HTTPException(status_code=401, detail="invalid signature")
