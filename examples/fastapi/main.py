@@ -1,14 +1,20 @@
+import os
+
 from fastapi import FastAPI, Header, HTTPException, Request
-from botads import AsyncBotadsClient, verify_signature, parse_webhook_payload
+
+from botads import AsyncBotadsClient, parse_webhook_payload, verify_signature
+
+BOT_API_TOKEN = os.getenv("BOT_API_TOKEN", "BOT_API_TOKEN")
+BOT_ID = int(os.getenv("BOT_ID", "123456789"))
+CLIENT_BASE_URL = os.getenv("CLIENT_BASE_URL", "http://localhost:8080")
 
 app = FastAPI()
-
-# Replace with real values or use env vars
-BOT_API_TOKEN = "BOT_API_TOKEN"
-BOT_ID = 123456789
-CLIENT_BASE_URL = "http://localhost:8080"
-
 client = AsyncBotadsClient(base_url=CLIENT_BASE_URL, api_token=BOT_API_TOKEN)
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
 
 async def issue_short_code(user_tg_id: str):
@@ -17,12 +23,22 @@ async def issue_short_code(user_tg_id: str):
 
 
 @app.post("/webhook")
-async def webhook(request: Request, x_signature: str = Header(None), x_bot_id: str = Header(None)):
+async def webhook(
+    request: Request,
+    x_signature: str = Header(default=""),
+    x_bot_id: str = Header(default=""),
+):
     body = await request.body()
+    if BOT_ID and x_bot_id and str(BOT_ID) != x_bot_id:
+        raise HTTPException(status_code=401, detail="bot_id mismatch")
     if not verify_signature(body, x_signature or "", BOT_API_TOKEN):
         raise HTTPException(status_code=401, detail="invalid signature")
     payload = parse_webhook_payload(body)
     # process payload.event / payload.user_tg_id / payload.data
+    print(
+        {"event": payload.event, "user_tg_id": payload.user_tg_id, "data": payload.data},
+        flush=True,
+    )
     return {"status": "ok"}
 
 
