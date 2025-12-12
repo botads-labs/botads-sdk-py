@@ -36,7 +36,12 @@ TELEGRAM_SECRET_TOKEN = os.getenv("TELEGRAM_SECRET_TOKEN", "")  # optional but r
 
 BOTADS_BASE_URL = os.getenv("BOTADS_BASE_URL", "https://api.botads.app")
 BOTADS_API_TOKEN = os.getenv("BOTADS_API_TOKEN", "")
-BOTADS_TG_BOT_ID = int(os.getenv("BOTADS_TG_BOT_ID", "0"))
+if not TELEGRAM_TOKEN or ":" not in TELEGRAM_TOKEN:
+    raise RuntimeError("TELEGRAM_TOKEN is required (format: <bot_id>:<token>)")
+try:
+    BOTADS_TG_BOT_ID = int(TELEGRAM_TOKEN.split(":", 1)[0])
+except ValueError as exc:
+    raise RuntimeError("Invalid TELEGRAM_TOKEN: cannot infer bot id") from exc
 
 MINIAPP_URL = os.getenv("MINIAPP_URL", "https://miniapp.example/launch")
 DIRECT_LINK_BASE_URL = os.getenv("DIRECT_LINK_BASE_URL", "https://botads.me/")
@@ -84,15 +89,6 @@ def requires_ad(state: UserState) -> bool:
 bot = TeleBot(TELEGRAM_TOKEN, parse_mode="HTML")
 botads_client = BotadsClient(BOTADS_BASE_URL, BOTADS_API_TOKEN)
 app = Flask(__name__)
-
-if not BOTADS_TG_BOT_ID and TELEGRAM_TOKEN and ":" in TELEGRAM_TOKEN:
-    try:
-        BOTADS_TG_BOT_ID = int(TELEGRAM_TOKEN.split(":", 1)[0])
-    except ValueError:
-        pass
-
-if not BOTADS_TG_BOT_ID:
-    raise RuntimeError("BOTADS_TG_BOT_ID is required (or inferable from TELEGRAM_TOKEN)")
 
 
 def configure_telegram_webhook() -> None:
