@@ -33,6 +33,12 @@ log = logging.getLogger(__name__)
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "")
 TELEGRAM_WEBHOOK_URL = os.getenv("TELEGRAM_WEBHOOK_URL", "")
 TELEGRAM_SECRET_TOKEN = os.getenv("TELEGRAM_SECRET_TOKEN", "")  # optional but recommended
+TELEGRAM_WEBHOOK_CERT_FILE = os.getenv("TELEGRAM_WEBHOOK_CERT_FILE", "")
+
+WEBHOOK_LISTEN_HOST = os.getenv("WEBHOOK_LISTEN_HOST", "0.0.0.0")
+WEBHOOK_LISTEN_PORT = int(os.getenv("WEBHOOK_LISTEN_PORT", "8080"))
+WEBHOOK_TLS_CERT_FILE = os.getenv("WEBHOOK_TLS_CERT_FILE", "")
+WEBHOOK_TLS_KEY_FILE = os.getenv("WEBHOOK_TLS_KEY_FILE", "")
 
 BOTADS_BASE_URL = os.getenv("BOTADS_BASE_URL", "https://api.botads.app")
 BOTADS_API_TOKEN = os.getenv("BOTADS_API_TOKEN", "")
@@ -94,7 +100,18 @@ app = Flask(__name__)
 def configure_telegram_webhook() -> None:
     """Set webhook so Telegram pushes updates into the Flask endpoint."""
     bot.remove_webhook()
-    bot.set_webhook(url=TELEGRAM_WEBHOOK_URL, secret_token=TELEGRAM_SECRET_TOKEN)
+    cert = None
+    if TELEGRAM_WEBHOOK_CERT_FILE:
+        cert = open(TELEGRAM_WEBHOOK_CERT_FILE, "rb")
+    try:
+        bot.set_webhook(
+            url=TELEGRAM_WEBHOOK_URL,
+            certificate=cert,
+            secret_token=TELEGRAM_SECRET_TOKEN or None,
+        )
+    finally:
+        if cert:
+            cert.close()
     log.info("Telegram webhook set to %s", TELEGRAM_WEBHOOK_URL)
 
 
@@ -228,7 +245,10 @@ def botads_webhook():
 
 def main() -> None:
     configure_telegram_webhook()
-    app.run(host="0.0.0.0", port=8080)
+    ssl_context = None
+    if WEBHOOK_TLS_CERT_FILE and WEBHOOK_TLS_KEY_FILE:
+        ssl_context = (WEBHOOK_TLS_CERT_FILE, WEBHOOK_TLS_KEY_FILE)
+    app.run(host=WEBHOOK_LISTEN_HOST, port=WEBHOOK_LISTEN_PORT, ssl_context=ssl_context)
 
 
 if __name__ == "__main__":
