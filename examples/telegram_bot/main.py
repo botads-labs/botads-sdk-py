@@ -45,7 +45,6 @@ log = logging.getLogger(__name__)
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "")
 TELEGRAM_WEBHOOK_URL = os.getenv("TELEGRAM_WEBHOOK_URL", "")
 TELEGRAM_SECRET_TOKEN = os.getenv("TELEGRAM_SECRET_TOKEN", "")  # optional but recommended
-TELEGRAM_WEBHOOK_CERT_FILE = os.getenv("TELEGRAM_WEBHOOK_CERT_FILE", "")
 
 WEBHOOK_LISTEN_HOST = os.getenv("WEBHOOK_LISTEN_HOST", "0.0.0.0")
 WEBHOOK_LISTEN_PORT = int(os.getenv("WEBHOOK_LISTEN_PORT", "8080"))
@@ -112,9 +111,10 @@ app = Flask(__name__)
 def configure_telegram_webhook() -> None:
     """Set webhook so Telegram pushes updates into the Flask endpoint."""
     bot.remove_webhook()
+    telegram_cert_file = os.getenv("TELEGRAM_WEBHOOK_CERT_FILE", "") or WEBHOOK_TLS_CERT_FILE
     cert = None
-    if TELEGRAM_WEBHOOK_CERT_FILE:
-        cert = open(TELEGRAM_WEBHOOK_CERT_FILE, "rb")
+    if telegram_cert_file:
+        cert = open(telegram_cert_file, "rb")
     try:
         bot.set_webhook(
             url=TELEGRAM_WEBHOOK_URL,
