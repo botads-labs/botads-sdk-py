@@ -8,8 +8,12 @@ The bot demonstrates two monetization flows:
 - Direct link fallback: user taps "Пропустить", receives a botads short link, and the
   webhook unlocks access after the click is confirmed.
 
-Run: python telegram_bot.py
-Make sure to expose the Flask server publicly (ngrok) and configure Telegram/Botads
+Run:
+  cd examples/telegram_bot
+  pip install -r requirements.txt
+  python main.py
+
+Make sure to expose the Flask server publicly (TLS required for Telegram) and configure
 webhooks to point at the endpoints defined below.
 """
 from __future__ import annotations
@@ -25,6 +29,14 @@ from telebot import TeleBot, types
 from telebot.apihelper import ApiException
 
 from botads import ApiError, BotadsClient, parse_webhook_payload, verify_signature
+
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover
+    load_dotenv = None
+
+if load_dotenv:
+    load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
