@@ -141,7 +141,12 @@ def handle_protected_action(message: types.Message) -> None:
 def send_ad_prompt(state: UserState) -> None:
     keyboard = types.InlineKeyboardMarkup()
     miniapp_url = f"{MINIAPP_URL}?user_tg_id={state.chat_id}"
-    keyboard.add(types.InlineKeyboardButton("Смотреть рекламу", url=miniapp_url))
+    keyboard.add(
+        types.InlineKeyboardButton(
+            "Смотреть рекламу",
+            web_app=types.WebAppInfo(url=miniapp_url),
+        )
+    )
     keyboard.add(
         types.InlineKeyboardButton("Пропустить", callback_data=f"skip:{state.chat_id}")
     )

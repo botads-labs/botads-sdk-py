@@ -4,3 +4,5 @@ dist/
 *.egg-info/
 examples/**/certs/
 examples/**/.env
+examples/**/venv/
+examples/**/.venv/
