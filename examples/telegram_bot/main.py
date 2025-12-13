@@ -66,9 +66,13 @@ DIRECT_LINK_BASE_URL = os.getenv("DIRECT_LINK_BASE_URL", "https://botads.me/")
 FORCE_AD_INTERVAL_SECONDS = 5 * 60  # require ad watch once per 5 minutes
 
 # Telegram copy
-AD_PROMPT_TEXT = "Чтобы продолжить, посмотрите короткую рекламу (5 сек) 👇"
-DIRECT_LINK_TEMPLATE = "Кликни на рекламу, чтобы получить доступ к боту 👇\n{url}"
-UNLOCKED_TEXT = "✅ Реклама подтверждена. Можете продолжить пользоваться ботом!"
+AD_PROMPT_TEXT = "Чтобы выполнить действие, подтвердите просмотр рекламы (5 сек) 👇"
+DIRECT_LINK_TEMPLATE = "Кликните по рекламной ссылке, чтобы разблокировать действие 👇\n{url}"
+UNLOCKED_TEXT = "✅ Просмотр подтвержден."
+ACTION_RESULT_TEXT = (
+    "🎉 Действие выполнено.\n"
+    "(Демо-результат; в реальном боте тут могла быть ваша фича/контент.)"
+)
 
 
 # --- State -------------------------------------------------------------------
@@ -133,7 +137,7 @@ def handle_protected_action(message: types.Message) -> None:
     user_id = message.from_user.id
     state = get_state(user_id, message.chat.id)
     if not requires_ad(state):
-        bot.send_message(message.chat.id, "🎉 Секретное действие выполнено без рекламы.")
+        bot.send_message(message.chat.id, "🎉 Действие выполнено. (Реклама уже была недавно.)")
         return
     send_ad_prompt(state)
 
@@ -202,7 +206,7 @@ def unlock_user(user_id: int, reason: str) -> None:
             pass
     state.ad_message_ids.clear()
     state.direct_link_message_id = None
-    bot.send_message(state.chat_id, UNLOCKED_TEXT + f"\n({reason})")
+    bot.send_message(state.chat_id, f"{UNLOCKED_TEXT}\n{ACTION_RESULT_TEXT}")
     log.info("Unlocked user %s via %s", user_id, reason)
 
 
@@ -211,14 +215,15 @@ def unlock_user(user_id: int, reason: str) -> None:
 def handle_start(message: types.Message) -> None:
     bot.send_message(
         message.chat.id,
-        "Привет! Этот бот показывает, как интегрировать Botads.\n"
-        "Напишите /secret, чтобы увидеть gating в действии.",
+        "Привет! Это демо Botads.\n"
+        "Сейчас попробуем выполнить действие; если прошло больше 5 минут — потребуется реклама.\n"
+        "Команда для повтора: /bonus",
     )
     handle_protected_action(message)
 
 
-@bot.message_handler(commands=["secret"])
-def handle_secret(message: types.Message) -> None:
+@bot.message_handler(commands=["bonus"])
+def handle_bonus(message: types.Message) -> None:
     handle_protected_action(message)
 
 
@@ -232,7 +237,7 @@ def handle_skip(call: types.CallbackQuery) -> None:
 
 @bot.message_handler(func=lambda _: True)
 def fallback(message: types.Message) -> None:
-    bot.send_message(message.chat.id, "Команда не распознана. Используйте /secret.")
+    bot.send_message(message.chat.id, "Команда не распознана. Используйте /bonus.")
 
 
 # --- HTTP endpoints ----------------------------------------------------------
