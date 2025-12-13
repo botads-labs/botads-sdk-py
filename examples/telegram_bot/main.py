@@ -172,7 +172,11 @@ def send_direct_link(state: UserState) -> None:
             pass
 
     url = f"{DIRECT_LINK_BASE_URL}{code.code}"
-    sent = bot.send_message(state.chat_id, DIRECT_LINK_TEMPLATE.format(url=url))
+    sent = bot.send_message(
+        state.chat_id,
+        DIRECT_LINK_TEMPLATE.format(url=url),
+        disable_web_page_preview=True,
+    )
     state.direct_link_message_id = sent.message_id
     state.ad_message_ids.append(sent.message_id)
     state.pending_mode = "direct_link"
