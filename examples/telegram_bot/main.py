@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Simple Telegram bot example built with pytelegrambotapi that forces users to
-watch Botads inventory once per 5 minutes before accessing a protected feature.
+watch Botads inventory once per 5 minutes before performing a protected action.
 
 The bot demonstrates two monetization flows:
 - Rewarded mini app: user taps "Смотреть рекламу" and finishes the mini app campaign.
@@ -184,6 +184,8 @@ def send_direct_link(state: UserState) -> None:
     sent = bot.send_message(
         state.chat_id,
         DIRECT_LINK_TEMPLATE.format(url=url),
+        # Important for direct_link: Telegram may fetch the URL to build a preview, which
+        # can accidentally trigger tracking/redirect logic as if the user clicked it.
         disable_web_page_preview=True,
     )
     state.direct_link_message_id = sent.message_id
@@ -217,7 +219,9 @@ def handle_start(message: types.Message) -> None:
         message.chat.id,
         "Привет! Это демо Botads.\n"
         "Сейчас попробуем выполнить действие; если прошло больше 5 минут — потребуется реклама.\n"
-        "Команда для повтора: /bonus",
+        "Команды:\n"
+        "/bonus — выполнить действие\n"
+        "/reset_ad — сбросить таймер (снова попросит рекламу)",
     )
     handle_protected_action(message)
 
@@ -225,6 +229,15 @@ def handle_start(message: types.Message) -> None:
 @bot.message_handler(commands=["bonus"])
 def handle_bonus(message: types.Message) -> None:
     handle_protected_action(message)
+
+
+@bot.message_handler(commands=["reset_ad"])
+def handle_reset_ad(message: types.Message) -> None:
+    user_id = message.from_user.id
+    state = get_state(user_id, message.chat.id)
+    state.last_unlock_ts = 0.0
+    state.pending_mode = None
+    bot.send_message(message.chat.id, "Таймер сброшен. Следующий /bonus снова потребует рекламу.")
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("skip:"))
@@ -237,7 +250,10 @@ def handle_skip(call: types.CallbackQuery) -> None:
 
 @bot.message_handler(func=lambda _: True)
 def fallback(message: types.Message) -> None:
-    bot.send_message(message.chat.id, "Команда не распознана. Используйте /bonus.")
+    bot.send_message(
+        message.chat.id,
+        "Команда не распознана. Используйте /bonus или /reset_ad.",
+    )
 
 
 # --- HTTP endpoints ----------------------------------------------------------
