@@ -31,7 +31,6 @@ from telebot.apihelper import ApiException
 from botads import (
     ApiError,
     BotadsClient,
-    DEFAULT_API_BASE_URL,
     EVENT_DIRECT_LINK,
     EVENT_REWARDED,
     parse_webhook_payload,
@@ -59,7 +58,7 @@ WEBHOOK_LISTEN_PORT = int(os.getenv("WEBHOOK_LISTEN_PORT", "8080"))
 WEBHOOK_TLS_CERT_FILE = os.getenv("WEBHOOK_TLS_CERT_FILE", "")
 WEBHOOK_TLS_KEY_FILE = os.getenv("WEBHOOK_TLS_KEY_FILE", "")
 
-BOTADS_BASE_URL = os.getenv("BOTADS_BASE_URL", DEFAULT_API_BASE_URL)
+BOTADS_BASE_URL = os.getenv("BOTADS_BASE_URL", "").strip()
 BOTADS_API_TOKEN = os.getenv("BOTADS_API_TOKEN", "")
 if not TELEGRAM_TOKEN or ":" not in TELEGRAM_TOKEN:
     raise RuntimeError("TELEGRAM_TOKEN is required (format: <bot_id>:<token>)")
@@ -115,7 +114,11 @@ def requires_ad(state: UserState) -> bool:
 
 # --- Bot + HTTP setup --------------------------------------------------------
 bot = TeleBot(TELEGRAM_TOKEN, parse_mode="HTML")
-botads_client = BotadsClient(base_url=BOTADS_BASE_URL, api_token=BOTADS_API_TOKEN)
+botads_client = (
+    BotadsClient(base_url=BOTADS_BASE_URL, api_token=BOTADS_API_TOKEN)
+    if BOTADS_BASE_URL
+    else BotadsClient(api_token=BOTADS_API_TOKEN)
+)
 app = Flask(__name__)
 
 
