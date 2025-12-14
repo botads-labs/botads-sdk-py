@@ -2,6 +2,14 @@ __pycache__/
 build/
 dist/
 *.egg-info/
+.env
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 examples/**/certs/
 examples/**/.env
 examples/**/venv/
