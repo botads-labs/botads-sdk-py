@@ -9,8 +9,9 @@
 | `BotadsClient`                  | `create_code(bot_id, user_tg_id) -> CodeResponse`    | Синхронный вызов Client API               |
 | `AsyncBotadsClient`             | `create_code(...)`                                   | Асинхронный вариант (aio/httpx)           |
 | Модели                          | `CodeResponse`, `ApiError`, `WebhookPayload`         | Типизированные ответы и ошибки            |
+| Константы                       | `EVENT_DIRECT_LINK`, `EVENT_REWARDED`                | Имена событий вебхуков                    |
 | Вебхук утилиты                  | `verify_signature(body, signature, token)`<br>`parse_webhook_payload(body)` | HMAC SHA-256 проверка и парсинг события |
-| Примеры                         | `sdks/python/examples/fastapi/main.py`               | Демонстрация async webhook handler + выдача short code |
+| Примеры                         | `sdks/python/examples/fastapi/main.py`<br>`sdks/python/examples/telegram_bot/main.py` | FastAPI webhook handler + Telegram bot demo |
 
 Все ошибки, которые возвращает Client API, описаны в публичной документации (`docs/public/content/api/central.md`). SDK мапит их в `ApiError`.
 
@@ -19,7 +20,8 @@
 - `botads/client.py` — синхронный клиент (requests).
 - `botads/async_client.py` — асинхронный клиент (httpx).
 - `botads/webhook.py` — HMAC-подпись, `WebhookPayload`.
-- `examples/fastapi/main.py` — пример использования.
+- `examples/fastapi/main.py` — пример FastAPI webhook.
+- `examples/telegram_bot/main.py` — пример Telegram bot + webhook endpoints.
 
 ## Установка
 
@@ -38,8 +40,9 @@ pip install -r requirements.txt
 
 ## TODO
 
-- Настроить CI (lint/tests) и автоматическую публикацию `botads-sdk` в PyPI.
 - Расширять список методов по мере появления новых возможностей Client API.
+
+CI уже включает sanity (`py_compile`), unit-тесты, сборку пакета и публикацию в PyPI по тегу (если задан `PYPI_TOKEN` в GitLab CI variables).
 
 ## Релиз / разработка
 

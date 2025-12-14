@@ -4,6 +4,7 @@ from typing import Optional
 import requests
 
 from .errors import ApiError
+from .constants import DEFAULT_API_BASE_URL, DEFAULT_DIRECT_LINK_BASE_URL
 
 
 @dataclass
@@ -12,11 +13,25 @@ class CodeResponse:
     expires_in: int
     expires_at: str
 
+    def direct_link_url(self, base_url: str = DEFAULT_DIRECT_LINK_BASE_URL) -> str:
+        return f"{base_url.rstrip('/')}/{self.code}"
+
+    @property
+    def direct_link(self) -> str:
+        return self.direct_link_url()
+
 
 class BotadsClient:
     """Synchronous client for the Botads Client API."""
 
-    def __init__(self, base_url: str, api_token: str, timeout: float = 10.0):
+    def __init__(
+        self,
+        base_url: str = DEFAULT_API_BASE_URL,
+        api_token: str = "",
+        timeout: float = 10.0,
+    ):
+        if not api_token:
+            raise ValueError("api_token is required")
         self.base_url = base_url.rstrip("/")
         self.api_token = api_token
         self.timeout = timeout

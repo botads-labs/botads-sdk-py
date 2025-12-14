@@ -28,7 +28,16 @@ from flask import Flask, abort, request
 from telebot import TeleBot, types
 from telebot.apihelper import ApiException
 
-from botads import ApiError, BotadsClient, parse_webhook_payload, verify_signature
+from botads import (
+    ApiError,
+    BotadsClient,
+    DEFAULT_API_BASE_URL,
+    DEFAULT_DIRECT_LINK_BASE_URL,
+    EVENT_DIRECT_LINK,
+    EVENT_REWARDED,
+    parse_webhook_payload,
+    verify_signature,
+)
 
 try:
     from dotenv import load_dotenv
@@ -51,7 +60,7 @@ WEBHOOK_LISTEN_PORT = int(os.getenv("WEBHOOK_LISTEN_PORT", "8080"))
 WEBHOOK_TLS_CERT_FILE = os.getenv("WEBHOOK_TLS_CERT_FILE", "")
 WEBHOOK_TLS_KEY_FILE = os.getenv("WEBHOOK_TLS_KEY_FILE", "")
 
-BOTADS_BASE_URL = os.getenv("BOTADS_BASE_URL", "https://api.botads.app")
+BOTADS_BASE_URL = os.getenv("BOTADS_BASE_URL", DEFAULT_API_BASE_URL)
 BOTADS_API_TOKEN = os.getenv("BOTADS_API_TOKEN", "")
 if not TELEGRAM_TOKEN or ":" not in TELEGRAM_TOKEN:
     raise RuntimeError("TELEGRAM_TOKEN is required (format: <bot_id>:<token>)")
@@ -61,7 +70,7 @@ except ValueError as exc:
     raise RuntimeError("Invalid TELEGRAM_TOKEN: cannot infer bot id") from exc
 
 MINIAPP_URL = os.getenv("MINIAPP_URL", "https://miniapp.example/launch")
-DIRECT_LINK_BASE_URL = os.getenv("DIRECT_LINK_BASE_URL", "https://botads.me/")
+DIRECT_LINK_BASE_URL = os.getenv("DIRECT_LINK_BASE_URL", DEFAULT_DIRECT_LINK_BASE_URL)
 
 FORCE_AD_INTERVAL_SECONDS = 5 * 60  # require ad watch once per 5 minutes
 
@@ -108,7 +117,7 @@ def requires_ad(state: UserState) -> bool:
 
 # --- Bot + HTTP setup --------------------------------------------------------
 bot = TeleBot(TELEGRAM_TOKEN, parse_mode="HTML")
-botads_client = BotadsClient(BOTADS_BASE_URL, BOTADS_API_TOKEN)
+botads_client = BotadsClient(base_url=BOTADS_BASE_URL, api_token=BOTADS_API_TOKEN)
 app = Flask(__name__)
 
 
@@ -180,7 +189,7 @@ def send_direct_link(state: UserState) -> None:
         except ValueError:
             pass
 
-    url = f"{DIRECT_LINK_BASE_URL}{code.code}"
+    url = code.direct_link_url(DIRECT_LINK_BASE_URL)
     sent = bot.send_message(
         state.chat_id,
         DIRECT_LINK_TEMPLATE.format(url=url),
@@ -276,9 +285,9 @@ def botads_webhook():
         abort(401)
     payload = parse_webhook_payload(body)
     user_id = int(payload.user_tg_id)
-    if payload.event == "rewarded":
+    if payload.event == EVENT_REWARDED:
         unlock_user(user_id, "миниапп просмотрена")
-    elif payload.event == "direct_link":
+    elif payload.event == EVENT_DIRECT_LINK:
         unlock_user(user_id, "переход по direct_link")
     else:
         log.info("Unhandled botads event %s for user %s", payload.event, user_id)

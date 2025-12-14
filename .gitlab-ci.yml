@@ -1,5 +1,8 @@
 stages:
   - lint
+  - test
+  - build
+  - publish
 
 commitlint:
   stage: lint
@@ -32,3 +35,48 @@ commitlint:
       fi
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+
+python_test:
+  stage: test
+  image: python:3.12-alpine
+  script:
+    - |
+      set -euo pipefail
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+      python -m py_compile botads/*.py examples/fastapi/main.py examples/telegram_bot/main.py
+      python -m unittest discover -s tests -p "test*.py"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_TAG'
+
+python_build:
+  stage: build
+  image: python:3.12-alpine
+  script:
+    - |
+      set -euo pipefail
+      python -m pip install --upgrade pip
+      python -m pip install build
+      python -m build
+  artifacts:
+    paths:
+      - dist/*
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_TAG'
+
+pypi_publish:
+  stage: publish
+  image: python:3.12-alpine
+  needs:
+    - job: python_build
+      artifacts: true
+  script:
+    - |
+      set -euo pipefail
+      python -m pip install --upgrade pip
+      python -m pip install twine
+      export TWINE_USERNAME="__token__"
+      export TWINE_PASSWORD="${PYPI_TOKEN}"
+      python -m twine upload --non-interactive dist/*
+  rules:
+    - if: '$CI_COMMIT_TAG && $PYPI_TOKEN'
