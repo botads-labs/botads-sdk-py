@@ -10,14 +10,9 @@ from botads import (
 
 BOT_API_TOKEN = os.getenv("BOT_API_TOKEN", "BOT_API_TOKEN")
 BOT_ID = os.getenv("BOT_ID", "123456789")
-CLIENT_BASE_URL = os.getenv("CLIENT_BASE_URL", "").strip()
 
 app = FastAPI()
-client = (
-    AsyncBotadsClient(base_url=CLIENT_BASE_URL, api_token=BOT_API_TOKEN)
-    if CLIENT_BASE_URL
-    else AsyncBotadsClient(api_token=BOT_API_TOKEN)
-)
+client = AsyncBotadsClient(api_token=BOT_API_TOKEN)
 
 
 @app.get("/health")
