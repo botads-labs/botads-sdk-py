@@ -32,7 +32,6 @@ from botads import (
     ApiError,
     BotadsClient,
     DEFAULT_API_BASE_URL,
-    DEFAULT_DIRECT_LINK_BASE_URL,
     EVENT_DIRECT_LINK,
     EVENT_REWARDED,
     parse_webhook_payload,
@@ -70,7 +69,6 @@ except ValueError as exc:
     raise RuntimeError("Invalid TELEGRAM_TOKEN: cannot infer bot id") from exc
 
 MINIAPP_URL = os.getenv("MINIAPP_URL", "https://miniapp.example/launch")
-DIRECT_LINK_BASE_URL = os.getenv("DIRECT_LINK_BASE_URL", DEFAULT_DIRECT_LINK_BASE_URL)
 
 FORCE_AD_INTERVAL_SECONDS = 5 * 60  # require ad watch once per 5 minutes
 
@@ -189,7 +187,7 @@ def send_direct_link(state: UserState) -> None:
         except ValueError:
             pass
 
-    url = code.direct_link_url(DIRECT_LINK_BASE_URL)
+    url = code.direct_link
     sent = bot.send_message(
         state.chat_id,
         DIRECT_LINK_TEMPLATE.format(url=url),
