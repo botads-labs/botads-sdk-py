@@ -1,4 +1,4 @@
-# Telegram Bot Demo (Botads)
+# Telegram Bot Demo (BotAds)
 
 This example shows how to:
 
@@ -21,11 +21,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Fill at least:
-
-- `TELEGRAM_TOKEN` (format: `<bot_id>:<token>`)
-- `TELEGRAM_WEBHOOK_URL` (must be HTTPS, path `/telegram/webhook`)
-- `BOTADS_API_TOKEN`
+Fill **all** fields in `.env.example` (copy it to `.env` and replace the values with your own).
 
 3. Generate a self-signed TLS cert for your public domain (or use a real cert):
 

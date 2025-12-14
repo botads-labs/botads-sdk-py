@@ -23,10 +23,7 @@ cd examples/fastapi
 cp .env.example .env
 ```
 
-Fill:
-
-- `BOT_API_TOKEN`
-- `BOT_ID`
+Fill **all** fields in `.env.example` (copy it to `.env` and replace the values with your own).
 
 3. Run:
 
